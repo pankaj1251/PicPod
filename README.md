@@ -61,3 +61,10 @@ The application includes a user authentication feature to manage user access and
 #### Post Drafting and Scheduling: 
 Users can draft and schedule social media posts within the application. Posts contain at least a title and description and can optionally include images or videos.
 
+
+## Video
+
+
+
+https://github.com/pankaj1251/PicPod/assets/62792492/af9e062e-87d9-464e-bb59-a35c0f26421c
+
