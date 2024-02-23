@@ -3,34 +3,80 @@ from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Profile
+from .models import Profile, Post, LikePost
 # from itertools import chain
 import random
 
-# Create your views here.
+#index view
 @login_required(login_url='signin')
 def index(req):
-    return render(req, 'index.html')
+    user_object = User.objects.get(username=req.user.username)
+    user_profile = Profile.objects.get(user=user_object)
 
+    posts = Post.objects.all()
+    return render(req, 'index.html', {'user_profile':user_profile, 'posts':posts})
+
+
+#upload view
 @login_required(login_url='signin')
-def settings(request):
-    user_profile = Profile.objects.get(user=request.user)
+def upload(req):
+    if req.method == "POST":
+        user = req.user.username
+        image = req.FILES.get('image_upload')
+        caption = req.POST['caption']
 
-    if request.method == 'POST':
+        new_post = Post.objects.create(user=user, image=image, caption=caption)
+        new_post.save()
+
+        return redirect('/')
+
+    else:    
+        return redirect('/')
+
+
+#like post view
+@login_required(login_url='signin')
+def like_post(req):
+    username = req.user.username
+    post_id = req.GET.get('post_id')
+
+    post = Post.objects.get(id=post_id)
+
+    like_filter = LikePost.objects.filter(post_id=post_id, username=username).first()
+
+    if like_filter == None:
+        new_like = LikePost.objects.create(post_id=post_id, username=username)
+        new_like.save()
+        post.no_of_likes = post.no_of_likes+1
+        post.save()
+        return redirect('/')
+    else:
+        like_filter.delete()
+        post.no_of_likes = post.no_of_likes-1
+        post.save()
+        return redirect('/')
+
+
+#settings view
+@login_required(login_url='signin')
+def settings(req):
+    user_profile = Profile.objects.get(user=req.user)
+
+    if req.method == 'POST':
         
-        if request.FILES.get('image') == None:
+        if req.FILES.get('image') == None:
             image = user_profile.profileimg
-            bio = request.POST['bio']
-            location = request.POST['location']
+            bio = req.POST['bio']
+            location = req.POST['location']
 
             user_profile.profileimg = image
             user_profile.bio = bio
             user_profile.location = location
             user_profile.save()
-        if request.FILES.get('image') != None:
-            image = request.FILES.get('image')
-            bio = request.POST['bio']
-            location = request.POST['location']
+        if req.FILES.get('image') != None:
+            image = req.FILES.get('image')
+            bio = req.POST['bio']
+            location = req.POST['location']
 
             user_profile.profileimg = image
             user_profile.bio = bio
@@ -38,10 +84,10 @@ def settings(request):
             user_profile.save()
         
         return redirect('settings')
-    return render(request, 'setting.html', {'user_profile': user_profile})
+    return render(req, 'setting.html', {'user_profile': user_profile})
 
 
-#signup
+#signup view
 def signup(req):
     if req.method == 'POST':
         username = req.POST['username']
@@ -76,28 +122,29 @@ def signup(req):
     else:    
         return render(req, 'signup.html')
     
-#signin
-def signin(request):
+
+#signin view
+def signin(req):
     
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+    if req.method == 'POST':
+        username = req.POST['username']
+        password = req.POST['password']
 
         user = auth.authenticate(username=username, password=password)
 
         if user is not None:
-            auth.login(request, user)
+            auth.login(req, user)
             return redirect('/')
         else:
-            messages.info(request, 'Credentials Invalid')
+            messages.info(req, 'Credentials Invalid')
             return redirect('signin')
 
     else:
-        return render(request, 'signin.html')
+        return render(req, 'signin.html')
 
 
-#logout
+#logout view
 @login_required(login_url='signin')
-def logout(request):
-    auth.logout(request)
+def logout(req):
+    auth.logout(req)
     return redirect('signin')

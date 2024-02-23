@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile
+from .models import Profile, Post, LikePost
 # Register your models here.
 
 # Username : picpod
@@ -7,3 +7,6 @@ from .models import Profile
 # pass: picpod
 
 admin.site.register(Profile)
+admin.site.register(Post)
+admin.site.register(LikePost)
+
